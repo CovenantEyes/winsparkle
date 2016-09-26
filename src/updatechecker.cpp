@@ -230,8 +230,6 @@ void UpdateChecker::Run()
 		{
 			if (checkUpdates)
 			{
-				static const time_t ONE_DAY = 60 * 60 * 24;
-
 				time_t lastCheck = 0;
 				Settings::ReadConfigValue("LastCheckTime", lastCheck);
 				const time_t currentTime = time(NULL);
@@ -245,7 +243,7 @@ void UpdateChecker::Run()
 			}
 		}
 		// Check every 5 minutes
-		Sleep(300000);
+		Sleep(win_sparkle_get_update_check_interval());
 	}
 }
 
