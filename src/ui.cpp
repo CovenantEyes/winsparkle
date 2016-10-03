@@ -750,27 +750,12 @@ void UpdateDialog::StateNoUpdateFound(bool installAutomatically)
 
     LayoutChangesGuard guard(this);
 
-    m_heading->SetLabel(_("You're up to date!"));
+    m_heading->SetLabel(_("You are up to date!"));
 
-    wxString msg;
-    try
-    {
-        msg = wxString::Format
-              (
-                  _("%s %s is currently the newest version available."),
-                  Settings::GetAppName(),
-                  Settings::GetAppVersion()
-              );
-    }
-    catch ( std::exception& )
-    {
-        // GetAppVersion() may fail
-        msg = "Error: Updates checking not properly configured.";
-    }
-
+    wxString msg = _("There are no new versions available at this time.");
     SetMessage(msg);
 
-    m_closeButton->SetLabel(_("Close"));
+    m_closeButton->SetLabel(_("OK"));
     m_closeButton->SetDefault();
     EnablePulsing(false);
 
@@ -851,8 +836,8 @@ void UpdateDialog::StateUpdateAvailable(const Appcast& info, bool installAutomat
         (
             wxString::Format
             (
-                _("%s %s is now available (you have %s). Would you like to download it now?"),
-                appname, ver_new, ver_my
+                _("You are currently using %s version %s.\nWould you like to download our new version (%s) now?"),
+                appname, ver_my, ver_new
             ),
             showRelnotes ? RELNOTES_WIDTH : MESSAGE_AREA_WIDTH
         );
