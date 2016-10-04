@@ -401,8 +401,8 @@ void WinSparkleDialog::SetHeadingFont(wxWindow *win)
                       Window for communicating with the user
  *--------------------------------------------------------------------------*/
 
-const int ID_SKIP_VERSION = wxNewId();
-const int ID_REMIND_LATER = wxNewId();
+const int ID_REMIND_HOUR = wxNewId();
+const int ID_REMIND_TOMORROW = wxNewId();
 const int ID_INSTALL = wxNewId();
 const int ID_RUN_INSTALLER = wxNewId();
 
@@ -432,8 +432,8 @@ private:
     void OnCloseButton(wxCommandEvent& event);
     void OnClose(wxCloseEvent& event);
 
-    void OnSkipVersion(wxCommandEvent&);
-    void OnRemindLater(wxCommandEvent&);
+    void OnRemindOneHour(wxCommandEvent&);
+    void OnRemindTomorrow(wxCommandEvent&);
     void OnInstall(wxCommandEvent&);
 
     void OnRunInstaller(wxCommandEvent&);
@@ -529,20 +529,21 @@ UpdateDialog::UpdateDialog()
     m_updateButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
     m_updateButtonsSizer->Add
                           (
-                            new wxButton(this, ID_SKIP_VERSION, _("Skip this version")),
+                            new wxButton(this, ID_REMIND_HOUR, _("Remind me in an hour")),
                             wxSizerFlags().Border(wxRIGHT, PX(20))
                           );
-    m_updateButtonsSizer->AddStretchSpacer(1);
     m_updateButtonsSizer->Add
                           (
-                            new wxButton(this, ID_REMIND_LATER, _("Remind me later")),
+                            new wxButton(this, ID_REMIND_TOMORROW, _("Remind me tomorrow")),
                             wxSizerFlags().Border(wxRIGHT, PX(10))
                           );
-    m_updateButtonsSizer->Add
+	m_updateButtonsSizer->AddStretchSpacer(1);
+	m_updateButtonsSizer->Add
                           (
                             m_installButton = new wxButton(this, ID_INSTALL, _("Download")),
                             wxSizerFlags()
                           );
+	m_installButton->SetFocus();
     m_buttonSizer->Add(m_updateButtonsSizer, wxSizerFlags(1));
 
     m_closeButtonSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -569,8 +570,8 @@ UpdateDialog::UpdateDialog()
     Bind(wxEVT_CLOSE_WINDOW, &UpdateDialog::OnClose, this);
     Bind(wxEVT_TIMER, &UpdateDialog::OnTimer, this);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnCloseButton, this, wxID_CANCEL);
-    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnSkipVersion, this, ID_SKIP_VERSION);
-    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRemindLater, this, ID_REMIND_LATER);
+    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRemindOneHour, this, ID_REMIND_HOUR);
+    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRemindTomorrow, this, ID_REMIND_TOMORROW);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnInstall, this, ID_INSTALL);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRunInstaller, this, ID_RUN_INSTALLER);
 }
@@ -626,17 +627,18 @@ void UpdateDialog::OnClose(wxCloseEvent&)
 }
 
 
-void UpdateDialog::OnSkipVersion(wxCommandEvent&)
+void UpdateDialog::OnRemindOneHour(wxCommandEvent&)
 {
-    Settings::WriteConfigValue("SkipThisVersion", m_appcast.Version);
+	static const int ONE_HOUR_IN_SECONDS = 3600;
+	Settings::WriteConfigValue("UpdateInterval", ONE_HOUR_IN_SECONDS);
     Close();
 }
 
 
-void UpdateDialog::OnRemindLater(wxCommandEvent&)
+void UpdateDialog::OnRemindTomorrow(wxCommandEvent&)
 {
-    // Just abort the update. Next time it's scheduled to run,
-    // the user will be prompted.
+	static const int ONE_DAY_IN_SECONDS = 86400;
+	Settings::WriteConfigValue("UpdateInterval", ONE_DAY_IN_SECONDS);
     Close();
 }
 
