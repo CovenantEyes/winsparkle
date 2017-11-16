@@ -320,12 +320,10 @@ protected:
 WinSparkleDialog::WinSparkleDialog()
     : wxDialog(NULL, wxID_ANY, _("Software Update"),
                wxDefaultPosition, wxDefaultSize,
-               wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxDIALOG_NO_PARENT)
+               wxDEFAULT_DIALOG_STYLE | wxDIALOG_NO_PARENT)
 {
     wxSize dpi = wxClientDC(this).GetPPI();
     m_scaleFactor = dpi.y / 96.0;
-
-    SetIcon(LoadNamedIcon(UI::GetDllHINSTANCE(), L"UpdateAvailable", GetSystemMetrics(SM_CXSMICON)));
 
     wxSizer *topSizer = new wxBoxSizer(wxHORIZONTAL);
 
@@ -388,7 +386,6 @@ void WinSparkleDialog::SetHeadingFont(wxWindow *win)
         // 9pt is base font, 12pt is for "Main instructions". See
         // http://msdn.microsoft.com/en-us/library/aa511282%28v=MSDN.10%29.aspx
         f.SetPointSize(f.GetPointSize() + 3);
-        win->SetForegroundColour(wxColour(0x00, 0x33, 0x99));
     }
     else // Windows XP/2000
     {
@@ -404,7 +401,6 @@ void WinSparkleDialog::SetHeadingFont(wxWindow *win)
                       Window for communicating with the user
  *--------------------------------------------------------------------------*/
 
-const int ID_SKIP_VERSION = wxNewId();
 const int ID_REMIND_LATER = wxNewId();
 const int ID_INSTALL = wxNewId();
 const int ID_RUN_INSTALLER = wxNewId();
@@ -530,11 +526,6 @@ UpdateDialog::UpdateDialog()
     m_buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 
     m_updateButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
-    m_updateButtonsSizer->Add
-                          (
-                            new wxButton(this, ID_SKIP_VERSION, _("Skip this version")),
-                            wxSizerFlags().Border(wxRIGHT, PX(20))
-                          );
     m_updateButtonsSizer->AddStretchSpacer(1);
     m_updateButtonsSizer->Add
                           (
@@ -572,7 +563,6 @@ UpdateDialog::UpdateDialog()
     Bind(wxEVT_CLOSE_WINDOW, &UpdateDialog::OnClose, this);
     Bind(wxEVT_TIMER, &UpdateDialog::OnTimer, this);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnCloseButton, this, wxID_CANCEL);
-    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnSkipVersion, this, ID_SKIP_VERSION);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRemindLater, this, ID_REMIND_LATER);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnInstall, this, ID_INSTALL);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRunInstaller, this, ID_RUN_INSTALLER);
@@ -753,27 +743,12 @@ void UpdateDialog::StateNoUpdateFound(bool installAutomatically)
 
     LayoutChangesGuard guard(this);
 
-    m_heading->SetLabel(_("You're up to date!"));
-
-    wxString msg;
-    try
-    {
-        msg = wxString::Format
-              (
-                  _("%s %s is currently the newest version available."),
-                  Settings::GetAppName(),
-                  Settings::GetAppVersion()
-              );
-    }
-    catch ( std::exception& )
-    {
-        // GetAppVersion() may fail
-        msg = "Error: Updates checking not properly configured.";
-    }
+    m_heading->SetLabel(_("You are up to date!"));
+	wxString msg = _("There are no new versions available at this time.");
 
     SetMessage(msg);
 
-    m_closeButton->SetLabel(_("Close"));
+    m_closeButton->SetLabel(_("OK"));
     m_closeButton->SetDefault();
     EnablePulsing(false);
 
@@ -854,8 +829,8 @@ void UpdateDialog::StateUpdateAvailable(const Appcast& info, bool installAutomat
         (
             wxString::Format
             (
-                _("%s %s is now available (you have %s). Would you like to download it now?"),
-                appname, ver_new, ver_my
+                _("You are currently using %s version %s.\nWould you like to download our new version (%s) now?"),
+                appname, ver_my, ver_new
             ),
             showRelnotes ? RELNOTES_WIDTH : MESSAGE_AREA_WIDTH
         );
@@ -1071,7 +1046,7 @@ void UpdateDialog::ShowReleaseNotes(const Appcast& info)
         }
     }
 
-    SetWindowStyleFlag(wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+    SetWindowStyleFlag(wxDEFAULT_DIALOG_STYLE);
 }
 
 
