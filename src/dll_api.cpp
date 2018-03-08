@@ -220,11 +220,12 @@ WIN_SPARKLE_API void __cdecl win_sparkle_set_update_check_interval(int interval)
 
     try
     {
-        if ( interval < MIN_CHECK_INTERVAL )
+		// Remove this limitation so QA can easily test
+        /*if ( interval < MIN_CHECK_INTERVAL )
         {
             winsparkle::LogError("Invalid update interval (min: 3600 seconds)");
             interval = MIN_CHECK_INTERVAL;
-        }
+        }*/
 
         Settings::WriteConfigValue("UpdateInterval", interval);
     }
