@@ -45,6 +45,7 @@
 #include <wx/intl.h>
 #include <wx/sizer.h>
 #include <wx/button.h>
+#include <wx/choice.h>
 #include <wx/filename.h>
 #include <wx/gauge.h>
 #include <wx/statbmp.h>
@@ -405,8 +406,8 @@ void WinSparkleDialog::SetHeadingFont(wxWindow *win)
                       Window for communicating with the user
  *--------------------------------------------------------------------------*/
 
-const int ID_REMIND_HOUR = wxNewId();
-const int ID_REMIND_TOMORROW = wxNewId();
+const int ID_REMIND_OPTIONS = wxNewId();
+const int ID_REMIND = wxNewId();
 const int ID_DOWNLOAD = wxNewId();
 const int ID_RUN_INSTALLER = wxNewId();
 
@@ -436,8 +437,7 @@ private:
     void OnCloseButton(wxCommandEvent& event);
     void OnClose(wxCloseEvent& event);
 
-    void OnRemindOneHour(wxCommandEvent&);
-    void OnRemindTomorrow(wxCommandEvent&);
+    void OnRemind(wxCommandEvent&);
     void OnDownload(wxCommandEvent&);
 
     void OnRunInstaller(wxCommandEvent&);
@@ -462,6 +462,7 @@ private:
     wxSizer      *m_updateButtonsSizer;
     wxSizer      *m_releaseNotesSizer;
     wxPanel      *m_browserParent;
+    wxChoice     *m_remindChoiceList;
 
     wxAutoOleInterface<IWebBrowser2> m_webBrowser;
 
@@ -530,18 +531,20 @@ UpdateDialog::UpdateDialog()
 
     m_buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 
+    const wxString REMIND_OPTIONS[] = { L"in an hour", L"tomorrow", L"next week" };
+    m_remindChoiceList = new wxChoice(this, ID_REMIND_OPTIONS, wxDefaultPosition, wxDefaultSize, sizeof(REMIND_OPTIONS)/sizeof(REMIND_OPTIONS[0]), REMIND_OPTIONS);
+    m_remindChoiceList->SetSelection(1);
+
     m_updateButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
     m_updateButtonsSizer->Add
-                          (
-                            new wxButton(this, ID_REMIND_HOUR, _("Remind me in an hour")),
-                            wxSizerFlags().Border(wxRIGHT, PX(20))
-                          );
+    (
+        new wxButton(this, ID_REMIND, _("Remind me")),
+        wxSizerFlags().Border(wxRIGHT, PX(20))
+    );
+
+    m_updateButtonsSizer->Add(m_remindChoiceList, wxSizerFlags().Border(wxRIGHT, PX(20)));
+
     m_updateButtonsSizer->AddStretchSpacer(1);
-    m_updateButtonsSizer->Add
-                          (
-                            new wxButton(this, ID_REMIND_TOMORROW, _("Remind me tomorrow")),
-                            wxSizerFlags().Border(wxRIGHT, PX(10))
-                          );
     m_updateButtonsSizer->Add
                           (
                             m_installButton = new wxButton(this, ID_DOWNLOAD, _("Download")),
@@ -573,8 +576,7 @@ UpdateDialog::UpdateDialog()
     Bind(wxEVT_CLOSE_WINDOW, &UpdateDialog::OnClose, this);
     Bind(wxEVT_TIMER, &UpdateDialog::OnTimer, this);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnCloseButton, this, wxID_CANCEL);
-    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRemindOneHour, this, ID_REMIND_HOUR);
-    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRemindTomorrow, this, ID_REMIND_TOMORROW);
+    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRemind, this, ID_REMIND);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnDownload, this, ID_DOWNLOAD);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRunInstaller, this, ID_RUN_INSTALLER);
 }
@@ -630,18 +632,31 @@ void UpdateDialog::OnClose(wxCloseEvent&)
 }
 
 
-void UpdateDialog::OnRemindOneHour(wxCommandEvent&)
+void UpdateDialog::OnRemind(wxCommandEvent&)
 {
-	static const int ONE_HOUR_IN_SECONDS = 3600;
-	Settings::WriteConfigValue("UpdateInterval", ONE_HOUR_IN_SECONDS);
-	Close();
-}
+    static const int ONE_HOUR_IN_SECONDS = 3600;
+    static const int ONE_DAY_IN_SECONDS = 86400;
+    static const int ONE_WEEK_IN_SECONDS = 604800;
+    int currentSelection = m_remindChoiceList->GetCurrentSelection();
 
+    int updateInterval = ONE_DAY_IN_SECONDS;
+    switch (currentSelection)
+    {
+        case 0:
+            updateInterval = ONE_HOUR_IN_SECONDS;
+            break;
+        case 1:
+            updateInterval = ONE_DAY_IN_SECONDS;
+            break;
+        case 2:
+            updateInterval = ONE_WEEK_IN_SECONDS;
+            break;
+        default:
+            updateInterval = ONE_HOUR_IN_SECONDS;
+            break;
+    }
 
-void UpdateDialog::OnRemindTomorrow(wxCommandEvent&)
-{
-	static const int ONE_DAY_IN_SECONDS = 86400;
-	Settings::WriteConfigValue("UpdateInterval", ONE_DAY_IN_SECONDS);
+    Settings::WriteConfigValue("UpdateInterval", updateInterval);
     Close();
 }
 
