@@ -70,6 +70,11 @@
 #define ERROR_RESOURCE_ENUM_USER_STOP                      15106
 #endif
 
+const int DOWNLOAD_NOW = 0;
+const int REMIND_ONE_HOUR = 1;
+const int REMIND_ONE_DAY = 2;
+const int REMIND_ONE_WEEK = 3;
+
 namespace winsparkle
 {
 
@@ -407,7 +412,6 @@ void WinSparkleDialog::SetHeadingFont(wxWindow *win)
  *--------------------------------------------------------------------------*/
 
 const int ID_REMIND_OPTIONS = wxNewId();
-const int ID_REMIND = wxNewId();
 const int ID_DOWNLOAD = wxNewId();
 const int ID_RUN_INSTALLER = wxNewId();
 
@@ -437,7 +441,6 @@ private:
     void OnCloseButton(wxCommandEvent& event);
     void OnClose(wxCloseEvent& event);
 
-    void OnRemind(wxCommandEvent&);
     void OnDownload(wxCommandEvent&);
 
     void OnRunInstaller(wxCommandEvent&);
@@ -531,23 +534,16 @@ UpdateDialog::UpdateDialog()
 
     m_buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    const wxString REMIND_OPTIONS[] = { L"in an hour", L"tomorrow", L"next week" };
+    const wxString REMIND_OPTIONS[] = { L"Download now", L"Remind me in 1 hour", L"Remind me tomorrow", L"Remind me in a week" };
     m_remindChoiceList = new wxChoice(this, ID_REMIND_OPTIONS, wxDefaultPosition, wxDefaultSize, sizeof(REMIND_OPTIONS)/sizeof(REMIND_OPTIONS[0]), REMIND_OPTIONS);
-    m_remindChoiceList->SetSelection(1);
+    m_remindChoiceList->SetSelection(DOWNLOAD_NOW);
 
     m_updateButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
-    m_updateButtonsSizer->Add
-    (
-        new wxButton(this, ID_REMIND, _("Remind me")),
-        wxSizerFlags().Border(wxRIGHT, PX(20))
-    );
-
-    m_updateButtonsSizer->Add(m_remindChoiceList, wxSizerFlags().Border(wxRIGHT, PX(20)));
-
     m_updateButtonsSizer->AddStretchSpacer(1);
+    m_updateButtonsSizer->Add(m_remindChoiceList, wxSizerFlags().Border(wxRIGHT, PX(20)));
     m_updateButtonsSizer->Add
                           (
-                            m_installButton = new wxButton(this, ID_DOWNLOAD, _("Download")),
+                            m_installButton = new wxButton(this, ID_DOWNLOAD, _("OK")),
                             wxSizerFlags()
                           );
     m_buttonSizer->Add(m_updateButtonsSizer, wxSizerFlags(1));
@@ -576,7 +572,6 @@ UpdateDialog::UpdateDialog()
     Bind(wxEVT_CLOSE_WINDOW, &UpdateDialog::OnClose, this);
     Bind(wxEVT_TIMER, &UpdateDialog::OnTimer, this);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnCloseButton, this, wxID_CANCEL);
-    Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRemind, this, ID_REMIND);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnDownload, this, ID_DOWNLOAD);
     Bind(wxEVT_COMMAND_BUTTON_CLICKED, &UpdateDialog::OnRunInstaller, this, ID_RUN_INSTALLER);
 }
@@ -632,7 +627,7 @@ void UpdateDialog::OnClose(wxCloseEvent&)
 }
 
 
-void UpdateDialog::OnRemind(wxCommandEvent&)
+void UpdateDialog::OnDownload(wxCommandEvent&)
 {
     static const int ONE_HOUR_IN_SECONDS = 3600;
     static const int ONE_DAY_IN_SECONDS = 86400;
@@ -642,40 +637,37 @@ void UpdateDialog::OnRemind(wxCommandEvent&)
     int updateInterval = ONE_DAY_IN_SECONDS;
     switch (currentSelection)
     {
-        case 0:
-            updateInterval = ONE_HOUR_IN_SECONDS;
-            break;
-        case 1:
-            updateInterval = ONE_DAY_IN_SECONDS;
-            break;
-        case 2:
-            updateInterval = ONE_WEEK_IN_SECONDS;
-            break;
-        default:
-            updateInterval = ONE_HOUR_IN_SECONDS;
-            break;
+    case DOWNLOAD_NOW:
+        if (!m_appcast.HasDownload())
+        {
+            wxLaunchDefaultBrowser(m_appcast.WebBrowserURL, wxBROWSER_NEW_WINDOW);
+            Close();
+        }
+        else if (m_downloader == NULL)
+        {
+            StateDownloading();
+
+            // Run the download in background.
+            m_downloader = new UpdateDownloader(m_appcast);
+            m_downloader->Start();
+        }
+        return;
+    case REMIND_ONE_HOUR:
+        updateInterval = ONE_HOUR_IN_SECONDS;
+        break;
+    case REMIND_ONE_DAY:
+        updateInterval = ONE_DAY_IN_SECONDS;
+        break;
+    case REMIND_ONE_WEEK:
+        updateInterval = ONE_WEEK_IN_SECONDS;
+        break;
+    default:
+        updateInterval = ONE_DAY_IN_SECONDS;
+        break;
     }
 
     Settings::WriteConfigValue("UpdateInterval", updateInterval);
     Close();
-}
-
-
-void UpdateDialog::OnDownload(wxCommandEvent&)
-{
-    if ( !m_appcast.HasDownload() )
-    {
-        wxLaunchDefaultBrowser(m_appcast.WebBrowserURL, wxBROWSER_NEW_WINDOW);
-        Close();
-    }
-    else if ( m_downloader == NULL )
-    {
-        StateDownloading();
-
-        // Run the download in background.
-        m_downloader = new UpdateDownloader(m_appcast);
-        m_downloader->Start();
-    }
 }
 
 void UpdateDialog::OnRunInstaller(wxCommandEvent&)
