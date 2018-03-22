@@ -534,7 +534,7 @@ UpdateDialog::UpdateDialog()
 
     m_buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    const wxString REMIND_OPTIONS[] = { L"Download now", L"Remind me in 1 hour", L"Remind me tomorrow", L"Remind me in a week" };
+    const wxString REMIND_OPTIONS[] = { L"Download now", L"Remind me in an hour", L"Remind me tomorrow", L"Remind me in a week" };
     m_remindChoiceList = new wxChoice(this, ID_REMIND_OPTIONS, wxDefaultPosition, wxDefaultSize, sizeof(REMIND_OPTIONS)/sizeof(REMIND_OPTIONS[0]), REMIND_OPTIONS);
     m_remindChoiceList->SetSelection(DOWNLOAD_NOW);
 

@@ -260,6 +260,15 @@ WIN_SPARKLE_API time_t __cdecl win_sparkle_get_last_check_time()
     return DEFAULT_LAST_CHECK_TIME;
 }
 
+WIN_SPARKLE_API void __cdecl win_sparkle_set_last_check_time(time_t lastCheckTime)
+{
+    try
+    {
+        Settings::WriteConfigValue("LastCheckTime", lastCheckTime);
+    }
+    CATCH_ALL_EXCEPTIONS
+}
+
 WIN_SPARKLE_API void __cdecl win_sparkle_set_error_callback(win_sparkle_error_callback_t callback)
 {
     try
