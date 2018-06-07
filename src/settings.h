@@ -290,6 +290,8 @@ public:
     // Deletes value from registry.
     static void DeleteConfigValue(const char *name);
 
+	static const int MIN_CHECK_INTERVAL = 300; // 5 minutes
+
     //@}
 
 private:
