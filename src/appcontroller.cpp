@@ -173,6 +173,13 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
         return 0;
 
     // Use temporary storage for receiving the data (to be populated by the callback)
+    // The DLL <-> App interface does not allow for (easy) passing (marshalling) of
+    // dynamic objects like std::string, so the implementation is limited to passing
+    // pointers to predefined size char arrays that need to be defined large enough
+    // to store representations of version strings, URLs and some arbitrary strings.
+    // The size of the arrays is also passed along to the App as a parameter to be able
+    // to prevent buffer overruns. This of course assumes that the size parameter is
+    // checked for and considered in the callback.
     static const int appcastBufferLength = 500;
 
     char version[appcastBufferLength];
