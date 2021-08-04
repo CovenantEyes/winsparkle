@@ -563,7 +563,7 @@ typedef int(__cdecl* win_sparkle_alternate_appcast_callback_t)(
     - 0 : when Appcast data was successfully acquired, indicating that NO update is available
     - WINSPARKLE_RETURN_ERROR : when Appcast data was NOT successfully acquired, in which case WinSparkle default handling should proceed
 
-    @since x.x
+    @since 0.7.1
 */
 WIN_SPARKLE_API void __cdecl win_sparkle_set_alternate_appcast_callback(win_sparkle_alternate_appcast_callback_t callback);
 
