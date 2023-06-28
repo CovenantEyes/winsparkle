@@ -26,12 +26,14 @@
 
 #include "updatechecker.h"
 #include "appcast.h"
-#include "appcontroller.h"
 #include "ui.h"
+#include "appcontroller.h"
 #include "error.h"
 #include "settings.h"
 #include "download.h"
 #include "utils.h"
+#include "signatureverifier.h"
+#include "updatedownloader.h"
 
 #include <ctime>
 #include <vector>
@@ -219,6 +221,41 @@ UpdateChecker::UpdateChecker(): Thread("WinSparkle updates check")
 {
 }
 
+bool CreateProcess(const std::wstring filePath, DWORD dwCreationFlags = 0, LPPROCESS_INFORMATION lpProcessInformation = NULL);
+
+bool CreateProcess(const std::wstring filePath, DWORD dwCreationFlags, LPPROCESS_INFORMATION lpProcessInformation)
+{
+    STARTUPINFO				Startup;
+    PROCESS_INFORMATION		processInfo;
+
+    if (filePath == L"")
+    {
+        // _critical << "invalid NULL process";
+        return false;
+    }
+
+    GetStartupInfo(&Startup);
+    Startup.wShowWindow = SW_SHOWNORMAL;
+    if (lpProcessInformation == NULL)
+    {
+        lpProcessInformation = &processInfo;
+    }
+
+    std::wstring fullCommandLine = filePath + L" -s";
+
+    if (!CreateProcess(NULL, const_cast<WCHAR*>(fullCommandLine.c_str()), NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &Startup, lpProcessInformation))
+    {
+        return false;
+    }
+    if (lpProcessInformation == &processInfo)
+    {
+        CloseHandle(processInfo.hProcess);
+        CloseHandle(processInfo.hThread);
+    }
+    return true;
+}
+
+
 void UpdateChecker::PerformUpdateCheck(bool manual)
 {
     try
@@ -254,32 +291,58 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
             }
         }
 
-        if (!appcast.ReleaseNotesURL.empty())
-            CheckForInsecureURL(appcast.ReleaseNotesURL, "release notes");
-        if (!appcast.DownloadURL.empty())
-            CheckForInsecureURL(appcast.DownloadURL, "update file");
+        if (appcast.SilentInstall)
+        {
+#if 0
+            const std::wstring tmpdir = winsparkle::CreateUniqueTempDirectory();
+            Settings::WriteConfigValue("UpdateTempDir", tmpdir);
 
-        Settings::WriteConfigValue("LastCheckTime", time(NULL));
+            UpdateDownloadSink sink(*this, tmpdir);
+            DownloadFile(appcast.DownloadURL, &sink, this);
+            sink.Close();
 
-        const std::string currentVersion =
+            if (Settings::HasDSAPubKeyPem())
+            {
+                SignatureVerifier::VerifyDSASHA1SignatureValid(sink.GetFilePath(), appcast.DsaSignature);
+            }
+            else
+            {
+                // backward compatibility - accept as is, but complain about it
+                LogError("Using unsigned updates!");
+            }
+
+            CreateProcess(sink.GetFilePath(), DETACHED_PROCESS);
+#endif
+        }
+        else
+        {
+            if (!appcast.ReleaseNotesURL.empty())
+                CheckForInsecureURL(appcast.ReleaseNotesURL, "release notes");
+            if (!appcast.DownloadURL.empty())
+                CheckForInsecureURL(appcast.DownloadURL, "update file");
+
+            Settings::WriteConfigValue("LastCheckTime", time(NULL));
+
+            const std::string currentVersion =
                 WideToAnsi(Settings::GetAppBuildVersion());
 
-        // Check if our version is out of date.
-        if ( !appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0 )
-        {
-            // The same or newer version is already installed.
-            UI::NotifyNoUpdates(ShouldAutomaticallyInstall());
-            return;
-        }
+            // Check if our version is out of date.
+            if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
+            {
+                // The same or newer version is already installed.
+                UI::NotifyNoUpdates(ShouldAutomaticallyInstall());
+                return;
+            }
 
-        // Check if the user opted to ignore this particular version.
-        if ( ShouldSkipUpdate(appcast) )
-        {
-            UI::NotifyNoUpdates(ShouldAutomaticallyInstall());
-            return;
-        }
+            // Check if the user opted to ignore this particular version.
+            if (ShouldSkipUpdate(appcast))
+            {
+                UI::NotifyNoUpdates(ShouldAutomaticallyInstall());
+                return;
+            }
 
-        UI::NotifyUpdateAvailable(appcast, ShouldAutomaticallyInstall());
+            UI::NotifyUpdateAvailable(appcast, ShouldAutomaticallyInstall());
+        }
     }
     catch ( ... )
     {
