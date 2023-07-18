@@ -291,8 +291,24 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
             }
         }
 
+        const std::string currentVersion = WideToAnsi(Settings::GetAppBuildVersion());
+
+        Settings::WriteConfigValue("LastCheckTime", time(NULL));
+
+        if (!appcast.ReleaseNotesURL.empty())
+            CheckForInsecureURL(appcast.ReleaseNotesURL, "release notes");
+        if (!appcast.DownloadURL.empty())
+            CheckForInsecureURL(appcast.DownloadURL, "update file");
+
         if (appcast.SilentInstall)
         {
+            // Check if our version is out of date.
+            if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
+            {
+                // The same or newer version is already installed.
+                return;
+            }
+
             if (appcast.DownloadURL != "")
             {
                 const std::wstring tmpdir = winsparkle::CreateUniqueTempDirectory();
@@ -317,16 +333,6 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
         }
         else
         {
-            if (!appcast.ReleaseNotesURL.empty())
-                CheckForInsecureURL(appcast.ReleaseNotesURL, "release notes");
-            if (!appcast.DownloadURL.empty())
-                CheckForInsecureURL(appcast.DownloadURL, "update file");
-
-            Settings::WriteConfigValue("LastCheckTime", time(NULL));
-
-            const std::string currentVersion =
-                WideToAnsi(Settings::GetAppBuildVersion());
-
             // Check if our version is out of date.
             if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
             {
