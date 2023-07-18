@@ -188,7 +188,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     char webBrowserUrl[appcastBufferLength];
     char title[appcastBufferLength];
     char description[appcastBufferLength];
-    bool silent;
+    bool silent = false;
 
     memset(version, 0x00, appcastBufferLength);
     memset(downloadUrl, 0x00, appcastBufferLength);
@@ -210,7 +210,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
         appcast.Title = title;
         appcast.Description = description;
         appcast.SilentInstall = silent;
-   }
+    }
 
     return retVal;
 }

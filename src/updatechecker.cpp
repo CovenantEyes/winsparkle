@@ -26,8 +26,8 @@
 
 #include "updatechecker.h"
 #include "appcast.h"
-#include "ui.h"
 #include "appcontroller.h"
+#include "ui.h"
 #include "error.h"
 #include "settings.h"
 #include "download.h"
@@ -225,12 +225,11 @@ bool CreateProcess(const std::wstring filePath, DWORD dwCreationFlags = 0, LPPRO
 
 bool CreateProcess(const std::wstring filePath, DWORD dwCreationFlags, LPPROCESS_INFORMATION lpProcessInformation)
 {
-    STARTUPINFO				Startup;
-    PROCESS_INFORMATION		processInfo;
+    STARTUPINFO             Startup;
+    PROCESS_INFORMATION     processInfo;
 
     if (filePath == L"")
     {
-        // _critical << "invalid NULL process";
         return false;
     }
 
@@ -247,6 +246,7 @@ bool CreateProcess(const std::wstring filePath, DWORD dwCreationFlags, LPPROCESS
     {
         return false;
     }
+
     if (lpProcessInformation == &processInfo)
     {
         CloseHandle(processInfo.hProcess);
@@ -293,26 +293,27 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
 
         if (appcast.SilentInstall)
         {
-#if 0
-            const std::wstring tmpdir = winsparkle::CreateUniqueTempDirectory();
-            Settings::WriteConfigValue("UpdateTempDir", tmpdir);
-
-            UpdateDownloadSink sink(*this, tmpdir);
-            DownloadFile(appcast.DownloadURL, &sink, this);
-            sink.Close();
-
-            if (Settings::HasDSAPubKeyPem())
+            if (appcast.DownloadURL != "")
             {
-                SignatureVerifier::VerifyDSASHA1SignatureValid(sink.GetFilePath(), appcast.DsaSignature);
-            }
-            else
-            {
-                // backward compatibility - accept as is, but complain about it
-                LogError("Using unsigned updates!");
-            }
+                const std::wstring tmpdir = winsparkle::CreateUniqueTempDirectory();
+                Settings::WriteConfigValue("UpdateTempDir", tmpdir);
 
-            CreateProcess(sink.GetFilePath(), DETACHED_PROCESS);
-#endif
+                UpdateDownloadSink sink(*this, tmpdir);
+                DownloadFile(appcast.DownloadURL, &sink, this);
+                sink.Close();
+
+                if (Settings::HasDSAPubKeyPem())
+                {
+                    SignatureVerifier::VerifyDSASHA1SignatureValid(sink.GetFilePath(), appcast.DsaSignature);
+                }
+                else
+                {
+                    // backward compatibility - accept as is, but complain about it
+                    LogError("Using unsigned updates!");
+                }
+
+                CreateProcess(sink.GetFilePath(), DETACHED_PROCESS);
+            }
         }
         else
         {

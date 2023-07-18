@@ -62,7 +62,7 @@ std::wstring winsparkle::CreateUniqueTempDirectory()
     // this process is repeated if the directory already exists.
     const std::wstring tmpdir = GetUniqueTempDirectoryPrefix();
 
-    for (;; )
+    for ( ;; )
     {
         std::wstring dir(tmpdir);
         UUID uuid;
@@ -72,9 +72,9 @@ std::wstring winsparkle::CreateUniqueTempDirectory()
         dir += reinterpret_cast<wchar_t*>(uuidStr);
         RpcStringFree(&uuidStr);
 
-        if (CreateDirectory(dir.c_str(), NULL))
+        if ( CreateDirectory(dir.c_str(), NULL) )
             return dir;
-        else if (GetLastError() != ERROR_ALREADY_EXISTS)
+        else if ( GetLastError() != ERROR_ALREADY_EXISTS )
             throw Win32Exception("Cannot create temporary directory");
     }
 }
