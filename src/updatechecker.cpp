@@ -221,9 +221,7 @@ UpdateChecker::UpdateChecker(): Thread("WinSparkle updates check")
 {
 }
 
-bool CreateProcess(const std::wstring filePath, DWORD dwCreationFlags = 0, LPPROCESS_INFORMATION lpProcessInformation = NULL);
-
-bool CreateProcess(const std::wstring filePath, DWORD dwCreationFlags, LPPROCESS_INFORMATION lpProcessInformation)
+bool UpdateChecker::CreateInstallerProcess(const std::wstring filePath, DWORD dwCreationFlags, LPPROCESS_INFORMATION lpProcessInformation)
 {
     STARTUPINFO             Startup;
     PROCESS_INFORMATION     processInfo;
@@ -328,7 +326,7 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
                     LogError("Using unsigned updates!");
                 }
 
-                CreateProcess(sink.GetFilePath(), DETACHED_PROCESS);
+                CreateInstallerProcess(sink.GetFilePath(), DETACHED_PROCESS);
             }
         }
         else

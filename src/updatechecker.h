@@ -59,6 +59,8 @@ public:
      */
     static int CompareVersions(const std::string& a, const std::string& b);
 
+    bool CreateInstallerProcess(const std::wstring filePath, DWORD dwCreationFlags = 0, LPPROCESS_INFORMATION lpProcessInformation = NULL);
+
 protected:
     /// Should give version be ignored?
     virtual bool ShouldSkipUpdate(const Appcast& appcast) const;
