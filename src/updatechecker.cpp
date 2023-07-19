@@ -295,11 +295,11 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
         if (appcast.SilentInstall)
         {
             // Check if our version is out of date.
-            //if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
-            //{
-            //    // The same or newer version is already installed.
-            //    return;
-            //}
+            if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
+            {
+                // The same or newer version is already installed.
+                return;
+            }
 
             if (!appcast.DownloadURL.empty())
             {
