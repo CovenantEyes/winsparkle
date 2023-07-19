@@ -252,7 +252,7 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
 {
     try
     {
-        struct winsparkle::Appcast appcast;
+        struct Appcast appcast;
 
         switch (ApplicationController::AlternateAppcastCallback(manual, appcast))
         {
@@ -294,6 +294,9 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
 
         if (appcast.SilentInstall)
         {
+            // Clean up from previous install attempt
+            UpdateDownloader::CleanLeftovers();
+
             // Check if our version is out of date.
             if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
             {
@@ -303,7 +306,7 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
 
             if (!appcast.DownloadURL.empty())
             {
-                const std::wstring tmpdir = winsparkle::CreateUniqueTempDirectory();
+                const std::wstring tmpdir = CreateUniqueTempDirectory();
                 Settings::WriteConfigValue("UpdateTempDir", tmpdir);
 
                 UpdateDownloadSink sink(*this, tmpdir);
