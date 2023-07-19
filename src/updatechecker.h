@@ -59,7 +59,7 @@ public:
      */
     static int CompareVersions(const std::string& a, const std::string& b);
 
-    bool CreateInstallerProcess(const std::wstring filePath, DWORD dwCreationFlags = 0, LPPROCESS_INFORMATION lpProcessInformation = NULL);
+    bool CreateInstallerProcess(const std::wstring filePath, DWORD dwCreationFlags);
 
 protected:
     /// Should give version be ignored?

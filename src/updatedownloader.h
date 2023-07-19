@@ -36,8 +36,7 @@
 
 namespace winsparkle
 {
-    // helper functions
-    std::wstring GetUniqueTempDirectoryPrefix();
+    // helper function
     std::wstring CreateUniqueTempDirectory();
 
     /**
@@ -73,58 +72,14 @@ namespace winsparkle
 
     struct UpdateDownloadSink : public IDownloadSink
     {
-        UpdateDownloadSink(Thread& thread, const std::wstring& dir)
-            : m_thread(thread),
-            m_dir(dir), m_file(NULL),
-            m_downloaded(0), m_total(0), m_lastUpdate(-1)
-        {}
+        UpdateDownloadSink(Thread& thread, const std::wstring& dir);
+        ~UpdateDownloadSink();
 
-        ~UpdateDownloadSink() { Close(); }
-
-        void Close()
-        {
-            if (m_file)
-            {
-                fclose(m_file);
-                m_file = NULL;
-            }
-        }
-
-        std::wstring GetFilePath(void) { return m_path; }
-
-        virtual void SetLength(size_t l) { m_total = l; }
-
-        virtual void SetFilename(const std::wstring& filename)
-        {
-            if (m_file)
-                throw std::runtime_error("Update file already set");
-
-            m_path = m_dir + L"\\" + filename;
-            m_file = _wfopen(m_path.c_str(), L"wb");
-            if (!m_file)
-                throw std::runtime_error("Cannot save update file");
-        }
-
-        virtual void Add(const void* data, size_t len)
-        {
-            if (!m_file)
-                throw std::runtime_error("Filename is not net");
-
-            m_thread.CheckShouldTerminate();
-
-            if (fwrite(data, len, 1, m_file) != 1)
-                throw std::runtime_error("Cannot save update file");
-            m_downloaded += len;
-
-            // only update at most 10 times/sec so that we don't flood the UI:
-            clock_t now = clock();
-            if (now == -1 || m_downloaded == m_total ||
-                ((double(now - m_lastUpdate) / CLOCKS_PER_SEC) >= 0.1))
-            {
-                UI::NotifyDownloadProgress(m_downloaded, m_total);
-                m_lastUpdate = now;
-            }
-        }
+        void Close();
+        std::wstring GetFilePath(void);
+        virtual void SetLength(size_t l);
+        virtual void SetFilename(const std::wstring& filename);
+        virtual void Add(const void* data, size_t len);
 
         Thread& m_thread;
         size_t m_downloaded, m_total;

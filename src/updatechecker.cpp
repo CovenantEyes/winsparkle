@@ -221,7 +221,7 @@ UpdateChecker::UpdateChecker(): Thread("WinSparkle updates check")
 {
 }
 
-bool UpdateChecker::CreateInstallerProcess(const std::wstring filePath, DWORD dwCreationFlags, LPPROCESS_INFORMATION lpProcessInformation)
+bool UpdateChecker::CreateInstallerProcess(const std::wstring filePath, DWORD dwCreationFlags)
 {
     STARTUPINFO             Startup;
     PROCESS_INFORMATION     processInfo;
@@ -233,23 +233,17 @@ bool UpdateChecker::CreateInstallerProcess(const std::wstring filePath, DWORD dw
 
     GetStartupInfo(&Startup);
     Startup.wShowWindow = SW_SHOWNORMAL;
-    if (lpProcessInformation == NULL)
-    {
-        lpProcessInformation = &processInfo;
-    }
-
+    
     std::wstring fullCommandLine = filePath + L" -s";
 
-    if (!CreateProcess(NULL, const_cast<WCHAR*>(fullCommandLine.c_str()), NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &Startup, lpProcessInformation))
+    if (!CreateProcess(NULL, const_cast<WCHAR*>(fullCommandLine.c_str()), NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &Startup, &processInfo))
     {
         return false;
     }
 
-    if (lpProcessInformation == &processInfo)
-    {
-        CloseHandle(processInfo.hProcess);
-        CloseHandle(processInfo.hThread);
-    }
+    CloseHandle(processInfo.hProcess);
+    CloseHandle(processInfo.hThread);
+
     return true;
 }
 
@@ -301,13 +295,13 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
         if (appcast.SilentInstall)
         {
             // Check if our version is out of date.
-            if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
-            {
-                // The same or newer version is already installed.
-                return;
-            }
+            //if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
+            //{
+            //    // The same or newer version is already installed.
+            //    return;
+            //}
 
-            if (appcast.DownloadURL != "")
+            if (!appcast.DownloadURL.empty())
             {
                 const std::wstring tmpdir = winsparkle::CreateUniqueTempDirectory();
                 Settings::WriteConfigValue("UpdateTempDir", tmpdir);

@@ -41,7 +41,7 @@ namespace winsparkle
                                   helpers
  *--------------------------------------------------------------------------*/
 
-std::wstring winsparkle::GetUniqueTempDirectoryPrefix()
+std::wstring GetUniqueTempDirectoryPrefix()
 {
     wchar_t tmpdir[MAX_PATH + 1];
     if (GetTempPath(MAX_PATH + 1, tmpdir) == 0)
@@ -52,7 +52,7 @@ std::wstring winsparkle::GetUniqueTempDirectoryPrefix()
     return dir;
 }
 
-std::wstring winsparkle::CreateUniqueTempDirectory()
+std::wstring CreateUniqueTempDirectory()
 {
     // We need to put downloaded updates into a directory of their own, because
     // if we put it in $TMP, some DLLs could be there and interfere with the
@@ -79,6 +79,58 @@ std::wstring winsparkle::CreateUniqueTempDirectory()
     }
 }
 
+UpdateDownloadSink::UpdateDownloadSink(Thread& thread, const std::wstring& dir)
+    : m_thread(thread),
+    m_dir(dir), m_file(NULL),
+    m_downloaded(0), m_total(0), m_lastUpdate(-1)
+    {};
+
+UpdateDownloadSink::~UpdateDownloadSink() { Close(); }
+
+void UpdateDownloadSink::Close()
+{
+    if (m_file)
+    {
+        fclose(m_file);
+        m_file = NULL;
+    }
+}
+
+std::wstring UpdateDownloadSink::GetFilePath(void) { return m_path; }
+
+void UpdateDownloadSink::SetLength(size_t l) { m_total = l; }
+
+void UpdateDownloadSink::SetFilename(const std::wstring& filename)
+{
+    if (m_file)
+        throw std::runtime_error("Update file already set");
+
+    m_path = m_dir + L"\\" + filename;
+    m_file = _wfopen(m_path.c_str(), L"wb");
+    if (!m_file)
+        throw std::runtime_error("Cannot save update file");
+}
+
+void UpdateDownloadSink::Add(const void* data, size_t len)
+{
+    if (!m_file)
+        throw std::runtime_error("Filename is not net");
+
+    m_thread.CheckShouldTerminate();
+
+    if (fwrite(data, len, 1, m_file) != 1)
+        throw std::runtime_error("Cannot save update file");
+    m_downloaded += len;
+
+    // only update at most 10 times/sec so that we don't flood the UI:
+    clock_t now = clock();
+    if (now == -1 || m_downloaded == m_total ||
+        ((double(now - m_lastUpdate) / CLOCKS_PER_SEC) >= 0.1))
+    {
+        UI::NotifyDownloadProgress(m_downloaded, m_total);
+        m_lastUpdate = now;
+    }
+}
 
 /*--------------------------------------------------------------------------*
                             updater initialization
@@ -102,7 +154,7 @@ void UpdateDownloader::Run()
 
     try
     {
-      const std::wstring tmpdir = winsparkle::CreateUniqueTempDirectory();
+      const std::wstring tmpdir = CreateUniqueTempDirectory();
       Settings::WriteConfigValue("UpdateTempDir", tmpdir);
 
       UpdateDownloadSink sink(*this, tmpdir);
@@ -151,7 +203,7 @@ void UpdateDownloader::CleanLeftovers()
     // malicious users from forcing us into deleting arbitrary directories:
     try
     {
-        if (tmpdir.find(winsparkle::GetUniqueTempDirectoryPrefix()) != 0)
+        if (tmpdir.find(GetUniqueTempDirectoryPrefix()) != 0)
         {
             Settings::DeleteConfigValue("UpdateTempDir");
             return;
