@@ -28,42 +28,66 @@
 
 #include "threads.h"
 #include "appcast.h"
+#include "download.h"
+#include "ui.h"
 
 #include <string>
+#include <time.h>
 
 namespace winsparkle
 {
-
-/**
-    This class performs application update.
-
-    If an update is found, then UpdateChecker initializes the GUI thread
-    and shows information about available update to the user.
- */
-class UpdateDownloader : public Thread
-{
-public:
-    /// Creates updater thread.
-    UpdateDownloader(const Appcast& appcast);
+    // helper function
+    std::wstring CreateUniqueTempDirectory();
 
     /**
-        Perform any necessary cleanup after previous updates.
+        This class performs application update.
 
-        Should be called on launch to get rid of leftover junk from previous
-        updates, such as the installer files. Call it as soon as possible,
-        before using other WinSparkle functionality.
+        If an update is found, then UpdateChecker initializes the GUI thread
+        and shows information about available update to the user.
      */
-    static void CleanLeftovers();
+    class UpdateDownloader : public Thread
+    {
+    public:
+        /// Creates updater thread.
+        UpdateDownloader(const Appcast& appcast);
 
-protected:
-    // Thread methods:
-    virtual void Run();
-    virtual bool IsJoinable() const { return true; }
+        /**
+            Perform any necessary cleanup after previous updates.
 
-private:
-    Appcast m_appcast;
-};
+            Should be called on launch to get rid of leftover junk from previous
+            updates, such as the installer files. Call it as soon as possible,
+            before using other WinSparkle functionality.
+         */
+        static void CleanLeftovers();
 
+    protected:
+        // Thread methods:
+        virtual void Run();
+        virtual bool IsJoinable() const { return true; }
+
+    private:
+        Appcast m_appcast;
+    };
+
+
+    struct UpdateDownloadSink : public IDownloadSink
+    {
+        UpdateDownloadSink(Thread& thread, const std::wstring& dir);
+        ~UpdateDownloadSink();
+
+        void Close();
+        std::wstring GetFilePath(void);
+        virtual void SetLength(size_t l);
+        virtual void SetFilename(const std::wstring& filename);
+        virtual void Add(const void* data, size_t len);
+
+        Thread& m_thread;
+        size_t m_downloaded, m_total;
+        FILE* m_file;
+        std::wstring m_dir;
+        std::wstring m_path;
+        clock_t m_lastUpdate;
+    };
 } // namespace winsparkle
 
 #endif // _updatedownloader_h_
