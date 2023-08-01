@@ -196,7 +196,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     memset(description, 0x00, appcastBufferLength);
 
     int retVal = 0;
-    // Get the alternate appcast data (use the user defined callback) if one is defined
+    // Get the service appcast data (use the user defined callback) if one is defined
     if (ms_cbServiceAppcast && IsWindowsService())
     {
         silent = true;

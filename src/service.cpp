@@ -6,5 +6,5 @@ BOOL IsWindowsService()
 {
     DWORD sessionId = 0;
     ProcessIdToSessionId(GetCurrentProcessId(), &sessionId);
-    return !sessionId;
+    return sessionId == 0;
 }
