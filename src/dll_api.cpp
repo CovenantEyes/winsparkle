@@ -28,6 +28,7 @@
 #include "appcontroller.h"
 #include "settings.h"
 #include "error.h"
+#include "service.h"
 #include "ui.h"
 #include "updatechecker.h"
 #include "updatedownloader.h"
@@ -428,7 +429,14 @@ WIN_SPARKLE_API void __cdecl win_sparkle_set_user_run_installer_callback(win_spa
 
 WIN_SPARKLE_API void __cdecl win_sparkle_set_alternate_appcast_callback(win_sparkle_alternate_appcast_callback_t callback)
 {
-    ApplicationController::SetAlternateAppcastCallback(callback);
+    if (IsWindowsService())
+    {
+        ApplicationController::SetServiceAppcastCallback(callback);
+    }
+    else
+    {
+        ApplicationController::SetAlternateAppcastCallback(callback);
+    }
 }
 
 } // extern "C"

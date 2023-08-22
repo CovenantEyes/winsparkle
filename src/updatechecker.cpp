@@ -233,8 +233,10 @@ bool UpdateChecker::CreateInstallerProcess(const std::wstring filePath, DWORD dw
 
     GetStartupInfo(&Startup);
     Startup.wShowWindow = SW_SHOWNORMAL;
-    
-    std::wstring fullCommandLine = filePath + L" -s";
+
+    // Ensure that Windows updates do not force a reboot during our installation
+    // Important Note: We currently cannot prevent the user from rebooting during our installation!
+    std::wstring fullCommandLine = filePath + L" /s REBOOT=ReallySuppress REBOOTPROMPT=Suppress";
 
     if (!CreateProcess(NULL, const_cast<WCHAR*>(fullCommandLine.c_str()), NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &Startup, &processInfo))
     {

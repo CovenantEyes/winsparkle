@@ -218,6 +218,7 @@
     <ClCompile Include="src\dllmain.cpp" />
     <ClCompile Include="src\download.cpp" />
     <ClCompile Include="src\error.cpp" />
+    <ClCompile Include="src\service.cpp" />
     <ClCompile Include="src\settings.cpp" />
     <ClCompile Include="src\threads.cpp" />
     <ClCompile Include="src\ui.cpp" />
@@ -232,6 +233,7 @@
     <ClInclude Include="src\appcontroller.h" />
     <ClInclude Include="src\download.h" />
     <ClInclude Include="src\error.h" />
+    <ClInclude Include="src\service.h" />
     <ClInclude Include="src\settings.h" />
     <ClInclude Include="src\threads.h" />
     <ClInclude Include="src\ui.h" />
