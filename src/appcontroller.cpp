@@ -45,6 +45,7 @@ win_sparkle_update_dismissed_callback_t    ApplicationController::ms_cbUpdateDis
 win_sparkle_user_run_installer_callback_t  ApplicationController::ms_cbUserRunInstaller = NULL;
 win_sparkle_alternate_appcast_callback_t   ApplicationController::ms_cbAlternateAppcast = NULL;
 win_sparkle_alternate_appcast_callback_t   ApplicationController::ms_cbServiceAppcast = NULL;
+win_sparkle_release_notes_callback_t       ApplicationController::ms_cbReleaseNotes = NULL;
 
 bool ApplicationController::IsReadyToShutdown()
 {
@@ -167,6 +168,16 @@ int ApplicationController::UserRunInstallerCallback(const wchar_t* filePath)
 
     return ms_cbUserRunInstaller(filePath);
 }
+
+
+int ApplicationController::ReleaseNotesCallback(Appcast& appcast)
+{
+    if (!ms_cbReleaseNotes)
+        return false;
+
+    return ms_cbReleaseNotes((char *)appcast.ReleaseNotesURL.c_str(), (char *)appcast.Version.c_str());
+}
+
 
 int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast& appcast)
 {

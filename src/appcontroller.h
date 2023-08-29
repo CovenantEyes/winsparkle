@@ -85,6 +85,8 @@ public:
     /// See return status for win_sparkle_alternate_appcast_callback_t
     static int AlternateAppcastCallback(bool manual, struct Appcast& appcast);
 
+    static int ReleaseNotesCallback(Appcast& appcast);
+
     //@}
 
     /**
@@ -173,6 +175,11 @@ public:
         ms_cbServiceAppcast = callback;
     }
 
+    static void SetReleaseNotesCallback(win_sparkle_release_notes_callback_t callback)
+    {
+        CriticalSectionLocker lock(ms_csVars);
+        ms_cbReleaseNotes = callback;
+    }
     //@}
 
 private:
@@ -193,6 +200,7 @@ private:
     static win_sparkle_user_run_installer_callback_t  ms_cbUserRunInstaller;
     static win_sparkle_alternate_appcast_callback_t   ms_cbAlternateAppcast;
     static win_sparkle_alternate_appcast_callback_t   ms_cbServiceAppcast;
+    static win_sparkle_release_notes_callback_t       ms_cbReleaseNotes;
 };
 
 } // namespace winsparkle

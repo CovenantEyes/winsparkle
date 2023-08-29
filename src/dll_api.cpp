@@ -439,4 +439,14 @@ WIN_SPARKLE_API void __cdecl win_sparkle_set_alternate_appcast_callback(win_spar
     }
 }
 
+WIN_SPARKLE_API void __cdecl win_sparkle_display_release_notes(char* releaseNotesUrl, char* releaseVersion)
+{
+    UI::NotifyDisplayReleaseNotes(releaseNotesUrl, releaseVersion);
+}
+
+WIN_SPARKLE_API void __cdecl win_sparkle_set_release_notes_callback(win_sparkle_release_notes_callback_t callback)
+{
+    ApplicationController::SetReleaseNotesCallback(callback);
+}
+
 } // extern "C"

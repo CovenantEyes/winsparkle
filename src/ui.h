@@ -94,6 +94,7 @@ public:
      */
     static void NotifyUpdateDownloaded(const std::wstring& updateFile, const Appcast &appcast);
 
+    static void NotifyDisplayReleaseNotes(char *releaseNotesUrl, char *releaseVersion);
     /**
         Shows the WinSparkle window in "checking for updates..." state.
      */

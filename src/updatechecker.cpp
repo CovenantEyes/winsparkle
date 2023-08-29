@@ -325,6 +325,9 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
                     LogError("Using unsigned updates!");
                 }
 
+                // Let the client save off the release notes for later usage
+                ApplicationController::ReleaseNotesCallback(appcast);
+
                 CreateInstallerProcess(sink.GetFilePath(), DETACHED_PROCESS);
             }
         }

@@ -434,6 +434,8 @@ public:
     void DownloadProgress(size_t downloaded, size_t total);
     // change state into "update downloaded"
     void StateUpdateDownloaded(const std::wstring& updateFile, const std::string &installerArguments);
+    // display release notes after install
+    void UpdateDialog::StateDisplayReleaseNotes(const Appcast& info);
 
 private:
     void EnablePulsing(bool enable);
@@ -827,6 +829,61 @@ void UpdateDialog::StateUpdateError(ErrorCode err)
 }
 
 
+void UpdateDialog::StateDisplayReleaseNotes(const Appcast& info)
+{
+    m_appcast = info;
+    const bool showRelnotes = !info.ReleaseNotesURL.empty() || !info.Version.empty();
+
+    {
+        LayoutChangesGuard guard(this);
+
+        const wxString appname = Settings::GetAppName();
+
+        wxString ver_new = info.Version;
+
+        //wxString ver_my = Settings::GetAppVersion();
+        //wxString ver_new = info.ShortVersionString;
+        //if (ver_new.empty())
+        //    ver_new = info.Version;
+        //if (ver_my == ver_new)
+        //{
+        //    ver_my = wxString::Format("%s (%s)", ver_my, Settings::GetAppBuildVersion());
+        //    ver_new = wxString::Format("%s (%s)", ver_new, info.Version);
+        //}
+
+        m_heading->SetLabel(
+            wxString::Format(_("%s has been upgraded to version %s"), appname, ver_new));
+
+        EnablePulsing(false);
+
+        // m_installButton->SetDefault();
+
+        SHOW(m_heading);
+        HIDE(m_progress);
+        HIDE(m_progressLabel);
+        SHOW(m_closeButtonSizer);
+        m_closeButton->SetLabel("OK");
+        HIDE(m_runInstallerButtonSizer);
+        HIDE(m_updateButtonsSizer);
+        DoShowElement(m_releaseNotesSizer, showRelnotes);
+        MakeResizable(showRelnotes);
+    }
+
+    // Only show the release notes now that the layout was updated, as it may
+    // take some time to load the MSIE control:
+    if (showRelnotes)
+    {
+        // ShowReleaseNotes() has been found to generate exceptions 
+        // Uncaught exceptions will cause the CE client to terminate.
+        // Therefore, catch all exceptions, so that the client will remain active!
+        try
+        {
+            ShowReleaseNotes(info);
+        }
+        CATCH_ALL_EXCEPTIONS
+    }
+}
+
 
 void UpdateDialog::StateUpdateAvailable(const Appcast& info, bool installAutomatically)
 {
@@ -1191,6 +1248,9 @@ const int MSG_UPDATE_DOWNLOADED = wxNewId();
 // Tell the UI to ask for permission to check updates
 const int MSG_ASK_FOR_PERMISSION = wxNewId();
 
+// Tell the UI to display the release notes
+const int MSG_DISPLAY_RELEASE_NOTES = wxNewId();
+
 
 /*--------------------------------------------------------------------------*
                                 Application
@@ -1220,6 +1280,7 @@ private:
     void OnDownloadProgress(wxThreadEvent& event);
     void OnUpdateDownloaded(wxThreadEvent& event);
     void OnAskForPermission(wxThreadEvent& event);
+    void OnDisplayReleaseNotes(wxThreadEvent& event);
 
 private:
     UpdateDialog *m_win;
@@ -1255,6 +1316,7 @@ App::App()
     Bind(wxEVT_COMMAND_THREAD, &App::OnDownloadProgress, this, MSG_DOWNLOAD_PROGRESS);
     Bind(wxEVT_COMMAND_THREAD, &App::OnUpdateDownloaded, this, MSG_UPDATE_DOWNLOADED);
     Bind(wxEVT_COMMAND_THREAD, &App::OnAskForPermission, this, MSG_ASK_FOR_PERMISSION);
+    Bind(wxEVT_COMMAND_THREAD, &App::OnDisplayReleaseNotes, this, MSG_DISPLAY_RELEASE_NOTES);
 }
 
 
@@ -1402,6 +1464,17 @@ void App::OnUpdateAvailable(wxThreadEvent& event)
 
     EventPayload payload(event.GetPayload<EventPayload>());
     m_win->StateUpdateAvailable(payload.appcast, payload.installAutomatically);
+
+    ShowWindow();
+}
+
+
+void App::OnDisplayReleaseNotes(wxThreadEvent& event)
+{
+    InitWindow();
+
+    EventPayload payload(event.GetPayload<EventPayload>());
+    m_win->StateDisplayReleaseNotes(payload.appcast);
 
     ShowWindow();
 }
@@ -1612,6 +1685,20 @@ void UI::AskForPermission()
 {
     UIThreadAccess uit;
     uit.App().SendMsg(MSG_ASK_FOR_PERMISSION);
+}
+
+
+/*static*/
+void UI::NotifyDisplayReleaseNotes(char* releaseNotesUrl, char* releaseVersion)
+{
+    UIThreadAccess uit;
+    EventPayload payload;
+
+    Appcast appcast;
+    appcast.ReleaseNotesURL = releaseNotesUrl;
+    appcast.Version = releaseVersion;
+    payload.appcast = appcast;
+    uit.App().SendMsg(MSG_DISPLAY_RELEASE_NOTES, &payload);
 }
 
 } // namespace winsparkle

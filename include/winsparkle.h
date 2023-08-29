@@ -571,6 +571,40 @@ typedef int(__cdecl* win_sparkle_alternate_appcast_callback_t)(
 */
 WIN_SPARKLE_API void __cdecl win_sparkle_set_alternate_appcast_callback(win_sparkle_alternate_appcast_callback_t callback);
 
+
+/**
+   Displays the release notes for the most recent upgrade.
+
+    Parameters:
+        - releaseNotesUrl : URL for the upgrade release notes
+        - releaseVersion : Software version associated with the upgrade
+
+    @since 0.7.5
+*/
+WIN_SPARKLE_API void __cdecl win_sparkle_display_release_notes(char* releaseNotesUrl, char* releaseVersion);
+
+/// Callback type for win_sparkle_release_notes_callback()
+typedef int(__cdecl* win_sparkle_release_notes_callback_t)(
+    char* releaseNotesUrl, char* releaseVersion);
+
+/**
+    Set callback to be called after a software upgrade has been downloaded and
+    will be silently installed. The callback should store the associated release
+    info in the local sqlite datbase for later usage in displaying release notes.
+
+    Parameters:
+        - releaseNotesUrl : URL for the upgrade release notes
+        - releaseVersion : Software version associated with the upgrade
+
+    The callback returns:
+    - 1 : when the release notes info was successfully saved to the database
+    - 0 : when the release notes info was not saved to the database
+    - WINSPARKLE_RETURN_ERROR : when Appcast data was NOT successfully acquired, in which case WinSparkle default handling should proceed
+
+    @since 0.7.5
+*/
+WIN_SPARKLE_API void __cdecl win_sparkle_set_release_notes_callback(win_sparkle_release_notes_callback_t callback);
+
 //@}
 
 
