@@ -69,6 +69,9 @@ struct Appcast
 
     // silent install (upgrade)
     bool SilentInstall;
+
+    // critical update - should install automatically (silently)
+    bool Critical;
     /**
         Initializes the struct with data from XML appcast feed.
 

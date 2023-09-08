@@ -187,6 +187,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     char title[appcastBufferLength];
     char description[appcastBufferLength];
     bool silent = false;
+    bool critical = false;
 
     memset(version, 0x00, appcastBufferLength);
     memset(downloadUrl, 0x00, appcastBufferLength);
@@ -202,13 +203,13 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
         silent = true;
         // Call the service callback function
         // Actually get the alternate appcast data (execute the user defined callback)
-        retVal = ms_cbServiceAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description);
+        retVal = ms_cbServiceAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description, &critical);
     }
     else if (ms_cbAlternateAppcast)
     {
         // Call the client callback function
         // Actually get the alternate appcast data (execute the user defined callback)
-        retVal = ms_cbAlternateAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description);
+        retVal = ms_cbAlternateAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description, &critical);
     }
 
     if (retVal == 1)
@@ -221,6 +222,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
         appcast.Title = title;
         appcast.Description = description;
         appcast.SilentInstall = silent;
+        appcast.Critical = critical;
     }
 
     return retVal;

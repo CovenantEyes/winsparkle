@@ -296,36 +296,39 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
 
         if (appcast.SilentInstall)
         {
-            // Clean up from previous install attempt
-            UpdateDownloader::CleanLeftovers();
-
-            // Check if our version is out of date.
-            if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
+            if (appcast.Critical)
             {
-                // The same or newer version is already installed.
-                return;
-            }
+                // Clean up from previous install attempt
+                UpdateDownloader::CleanLeftovers();
 
-            if (!appcast.DownloadURL.empty())
-            {
-                const std::wstring tmpdir = CreateUniqueTempDirectory();
-                Settings::WriteConfigValue("UpdateTempDir", tmpdir);
-
-                UpdateDownloadSink sink(*this, tmpdir);
-                DownloadFile(appcast.DownloadURL, &sink, this);
-                sink.Close();
-
-                if (Settings::HasDSAPubKeyPem())
+                // Check if our version is out of date.
+                if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
                 {
-                    SignatureVerifier::VerifyDSASHA1SignatureValid(sink.GetFilePath(), appcast.DsaSignature);
-                }
-                else
-                {
-                    // backward compatibility - accept as is, but complain about it
-                    LogError("Using unsigned updates!");
+                    // The same or newer version is already installed.
+                    return;
                 }
 
-                CreateInstallerProcess(sink.GetFilePath(), DETACHED_PROCESS);
+                if (!appcast.DownloadURL.empty())
+                {
+                    const std::wstring tmpdir = CreateUniqueTempDirectory();
+                    Settings::WriteConfigValue("UpdateTempDir", tmpdir);
+
+                    UpdateDownloadSink sink(*this, tmpdir);
+                    DownloadFile(appcast.DownloadURL, &sink, this);
+                    sink.Close();
+
+                    if (Settings::HasDSAPubKeyPem())
+                    {
+                        SignatureVerifier::VerifyDSASHA1SignatureValid(sink.GetFilePath(), appcast.DsaSignature);
+                    }
+                    else
+                    {
+                        // backward compatibility - accept as is, but complain about it
+                        LogError("Using unsigned updates!");
+                    }
+
+                    CreateInstallerProcess(sink.GetFilePath(), DETACHED_PROCESS);
+                }
             }
         }
         else
