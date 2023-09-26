@@ -333,8 +333,9 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
         }
         else
         {
-            // Check if our version is out of date.
-            if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
+            // Check if it's a critical update or if our version is out of date.
+            // Critical updates are only handled silently
+            if (!appcast.IsValid() || appcast.Critical || CompareVersions(currentVersion, appcast.Version) >= 0)
             {
                 // The same or newer version is already installed.
                 UI::NotifyNoUpdates(ShouldAutomaticallyInstall());
