@@ -255,8 +255,9 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
     try
     {
         struct Appcast appcast;
+        bool silentInstall = false;
 
-        switch (ApplicationController::AlternateAppcastCallback(manual, appcast))
+        switch (ApplicationController::AlternateAppcastCallback(manual, appcast, &silentInstall))
         {
             case 0:
                 // Alternate user callback handled acquiring update information (NO update is available)
@@ -294,48 +295,44 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
         if (!appcast.DownloadURL.empty())
             CheckForInsecureURL(appcast.DownloadURL, "update file");
 
-        if (appcast.SilentInstall)
+        if (silentInstall)
         {
-            if (appcast.Critical)
+            // Clean up from previous install attempt
+            UpdateDownloader::CleanLeftovers();
+
+            // Check if our version is out of date.
+            if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
             {
-                // Clean up from previous install attempt
-                UpdateDownloader::CleanLeftovers();
+                // The same or newer version is already installed.
+                return;
+            }
 
-                // Check if our version is out of date.
-                if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
+            if (!appcast.DownloadURL.empty())
+            {
+                const std::wstring tmpdir = CreateUniqueTempDirectory();
+                Settings::WriteConfigValue("UpdateTempDir", tmpdir);
+
+                UpdateDownloadSink sink(*this, tmpdir);
+                DownloadFile(appcast.DownloadURL, &sink, this);
+                sink.Close();
+
+                if (Settings::HasDSAPubKeyPem())
                 {
-                    // The same or newer version is already installed.
-                    return;
+                    SignatureVerifier::VerifyDSASHA1SignatureValid(sink.GetFilePath(), appcast.DsaSignature);
+                }
+                else
+                {
+                    // backward compatibility - accept as is, but complain about it
+                    LogError("Using unsigned updates!");
                 }
 
-                if (!appcast.DownloadURL.empty())
-                {
-                    const std::wstring tmpdir = CreateUniqueTempDirectory();
-                    Settings::WriteConfigValue("UpdateTempDir", tmpdir);
-
-                    UpdateDownloadSink sink(*this, tmpdir);
-                    DownloadFile(appcast.DownloadURL, &sink, this);
-                    sink.Close();
-
-                    if (Settings::HasDSAPubKeyPem())
-                    {
-                        SignatureVerifier::VerifyDSASHA1SignatureValid(sink.GetFilePath(), appcast.DsaSignature);
-                    }
-                    else
-                    {
-                        // backward compatibility - accept as is, but complain about it
-                        LogError("Using unsigned updates!");
-                    }
-
-                    CreateInstallerProcess(sink.GetFilePath(), DETACHED_PROCESS);
-                }
+                CreateInstallerProcess(sink.GetFilePath(), DETACHED_PROCESS);
             }
         }
         else
         {
-            // Check if it's a critical update or if our version is out of date.
-            // Critical updates are only handled silently
-            if (!appcast.IsValid() || appcast.Critical || CompareVersions(currentVersion, appcast.Version) >= 0)
+            // Check if our version is out of date.
+            if (!appcast.IsValid() || CompareVersions(currentVersion, appcast.Version) >= 0)
             {
                 // The same or newer version is already installed.
                 UI::NotifyNoUpdates(ShouldAutomaticallyInstall());

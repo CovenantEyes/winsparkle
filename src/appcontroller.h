@@ -83,7 +83,7 @@ public:
 
     /// Run the alternate appcast callback if one is set.
     /// See return status for win_sparkle_alternate_appcast_callback_t
-    static int AlternateAppcastCallback(bool manual, struct Appcast& appcast);
+    static int AlternateAppcastCallback(bool manual, struct Appcast& appcast, bool *silent);
 
     //@}
 
@@ -167,12 +167,6 @@ public:
         ms_cbAlternateAppcast = callback;
     }
 
-    static void SetServiceAppcastCallback(win_sparkle_alternate_appcast_callback_t callback)
-    {
-        CriticalSectionLocker lock(ms_csVars);
-        ms_cbServiceAppcast = callback;
-    }
-
     //@}
 
 private:
@@ -192,7 +186,6 @@ private:
     static win_sparkle_update_dismissed_callback_t    ms_cbUpdateDismissed;
     static win_sparkle_user_run_installer_callback_t  ms_cbUserRunInstaller;
     static win_sparkle_alternate_appcast_callback_t   ms_cbAlternateAppcast;
-    static win_sparkle_alternate_appcast_callback_t   ms_cbServiceAppcast;
 };
 
 } // namespace winsparkle
