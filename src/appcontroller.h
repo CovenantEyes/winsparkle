@@ -83,7 +83,7 @@ public:
 
     /// Run the alternate appcast callback if one is set.
     /// See return status for win_sparkle_alternate_appcast_callback_t
-    static int AlternateAppcastCallback(bool manual, struct Appcast& appcast, bool *silent);
+    static int AlternateAppcastCallback(bool manual, struct Appcast& appcast);
 
     //@}
 

@@ -67,6 +67,9 @@ struct Appcast
     // Arguments passed on the the updater executable
     std::string InstallerArguments;
 
+    // silent install (upgrade)
+    bool SilentInstall;
+
     /**
         Initializes the struct with data from XML appcast feed.
 

@@ -166,7 +166,7 @@ int ApplicationController::UserRunInstallerCallback(const wchar_t* filePath)
     return ms_cbUserRunInstaller(filePath);
 }
 
-int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast& appcast, bool *silent)
+int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast& appcast)
 {
     // Use temporary storage for receiving the data (to be populated by the callback)
     // The DLL <-> App interface does not allow for (easy) passing (marshalling) of
@@ -184,6 +184,8 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     char webBrowserUrl[appcastBufferLength];
     char title[appcastBufferLength];
     char description[appcastBufferLength];
+    bool silent = false;
+    appcast.SilentInstall = false;
 
     memset(version, 0x00, appcastBufferLength);
     memset(downloadUrl, 0x00, appcastBufferLength);
@@ -193,7 +195,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     memset(description, 0x00, appcastBufferLength);
 
     int retVal = 0;
-    retVal = ms_cbAlternateAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description, silent);
+    retVal = ms_cbAlternateAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description, &silent);
 
     if (retVal == 1)
     {
@@ -204,6 +206,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
         appcast.WebBrowserURL = webBrowserUrl;
         appcast.Title = title;
         appcast.Description = description;
+        appcast.SilentInstall = silent;
     }
 
     return retVal;

@@ -255,9 +255,8 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
     try
     {
         struct Appcast appcast;
-        bool silentInstall = false;
 
-        switch (ApplicationController::AlternateAppcastCallback(manual, appcast, &silentInstall))
+        switch (ApplicationController::AlternateAppcastCallback(manual, appcast))
         {
             case 0:
                 // Alternate user callback handled acquiring update information (NO update is available)
@@ -295,7 +294,7 @@ void UpdateChecker::PerformUpdateCheck(bool manual)
         if (!appcast.DownloadURL.empty())
             CheckForInsecureURL(appcast.DownloadURL, "update file");
 
-        if (silentInstall)
+        if (appcast.SilentInstall)
         {
             // Clean up from previous install attempt
             UpdateDownloader::CleanLeftovers();
