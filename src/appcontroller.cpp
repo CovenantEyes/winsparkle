@@ -25,7 +25,6 @@
 
 #include "appcontroller.h"
 #include "appcast.h"
-#include "service.h"
 
 
 namespace winsparkle
@@ -44,7 +43,6 @@ win_sparkle_update_postponed_callback_t    ApplicationController::ms_cbUpdatePos
 win_sparkle_update_dismissed_callback_t    ApplicationController::ms_cbUpdateDismissed = NULL;
 win_sparkle_user_run_installer_callback_t  ApplicationController::ms_cbUserRunInstaller = NULL;
 win_sparkle_alternate_appcast_callback_t   ApplicationController::ms_cbAlternateAppcast = NULL;
-win_sparkle_alternate_appcast_callback_t   ApplicationController::ms_cbServiceAppcast = NULL;
 
 bool ApplicationController::IsReadyToShutdown()
 {
@@ -187,6 +185,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     char title[appcastBufferLength];
     char description[appcastBufferLength];
     bool silent = false;
+    appcast.SilentInstall = false;
 
     memset(version, 0x00, appcastBufferLength);
     memset(downloadUrl, 0x00, appcastBufferLength);
@@ -196,20 +195,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     memset(description, 0x00, appcastBufferLength);
 
     int retVal = 0;
-    // Get the service appcast data (use the user defined callback) if one is defined
-    if (ms_cbServiceAppcast && IsWindowsService())
-    {
-        silent = true;
-        // Call the service callback function
-        // Actually get the alternate appcast data (execute the user defined callback)
-        retVal = ms_cbServiceAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description);
-    }
-    else if (ms_cbAlternateAppcast)
-    {
-        // Call the client callback function
-        // Actually get the alternate appcast data (execute the user defined callback)
-        retVal = ms_cbAlternateAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description);
-    }
+    retVal = ms_cbAlternateAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description, &silent);
 
     if (retVal == 1)
     {
