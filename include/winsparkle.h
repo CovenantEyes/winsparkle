@@ -545,7 +545,7 @@ WIN_SPARKLE_API void __cdecl win_sparkle_set_user_run_installer_callback(win_spa
 
 /// Callback type for win_sparkle_alternate_appcast_callback()
 typedef int(__cdecl* win_sparkle_alternate_appcast_callback_t)(
-    bool manual, int bufferSize, char* version, char* downloadUrl, char* releaseNotesUrl, char* webBrowserUrl, char* title, char* description, bool *silent);
+    bool manual, int bufferSize, char* version, char* downloadUrl, char* releaseNotesUrl, char* webBrowserUrl, char* title, char* description, char *silent);
 
 /**
     Set callback to be called when Appcast data is needed to be
@@ -561,6 +561,7 @@ typedef int(__cdecl* win_sparkle_alternate_appcast_callback_t)(
         - webBrowserUrl : the location to launch in web browser for manual download
         - title : the title of the update
         - description :the description of the update
+        - silent: flag indicating if the the update should be executed silently (by the background comm service) or manually (by the main client app)
 
     The callback returns:
     - 1 : when Appcast data was successfully acquired, indicating update is available
