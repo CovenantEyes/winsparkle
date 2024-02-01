@@ -184,8 +184,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     char webBrowserUrl[appcastBufferLength];
     char title[appcastBufferLength];
     char description[appcastBufferLength];
-    bool silent = false;
-    appcast.SilentInstall = false;
+    char silent[appcastBufferLength];
 
     memset(version, 0x00, appcastBufferLength);
     memset(downloadUrl, 0x00, appcastBufferLength);
@@ -193,9 +192,10 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
     memset(webBrowserUrl, 0x00, appcastBufferLength);
     memset(title, 0x00, appcastBufferLength);
     memset(description, 0x00, appcastBufferLength);
+    memset(silent, 0x00, appcastBufferLength);
 
     int retVal = 0;
-    retVal = ms_cbAlternateAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description, &silent);
+    retVal = ms_cbAlternateAppcast(manual, appcastBufferLength - 1, version, downloadUrl, releaseNotesUrl, webBrowserUrl, title, description, silent);
 
     if (retVal == 1)
     {
@@ -206,7 +206,7 @@ int ApplicationController::AlternateAppcastCallback(bool manual, struct Appcast&
         appcast.WebBrowserURL = webBrowserUrl;
         appcast.Title = title;
         appcast.Description = description;
-        appcast.SilentInstall = silent;
+        silent[0] == '1' ? appcast.SilentInstall = true : appcast.SilentInstall = false;
     }
 
     return retVal;
