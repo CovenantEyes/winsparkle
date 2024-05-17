@@ -91,9 +91,6 @@
     <ClCompile Include="wxWidgets\src\common\dpycmn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wxWidgets\src\common\dynarray.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="wxWidgets\src\common\dynlib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -143,6 +140,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wxWidgets\src\common\iconbndl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wxWidgets\src\common\imagbmp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wxWidgets\src\common\image.cpp">
@@ -517,5 +517,11 @@
     <ClCompile Include="wxWidgets\src\msw\choice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wxWidgets\src\msw\popupwin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\packages.config" />
   </ItemGroup>
 </Project>
